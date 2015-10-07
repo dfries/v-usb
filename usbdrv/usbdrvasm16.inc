@@ -31,6 +31,8 @@ of CPU cycles, but even an exact number of cycles!
 
 USB_INTR_VECTOR:
 ;order of registers pushed: YL, SREG YH, [sofError], bitcnt, shift, x1, x2, x3, x4, cnt
+    ; PORTD |= _BV(0); turn the LED on (start of USB interrupt) to indicate busy
+    sbi     0x12, 0
     push    YL                  ;[-25] push only what is necessary to sync with edge ASAP
     in      YL, SREG            ;[-23]
     push    YL                  ;[-22]
@@ -216,12 +218,16 @@ macro POP_STANDARD ; 14 cycles
     pop     x1
     pop     shift
     pop     bitcnt
+    ; PORTD &= ~_BV(0); turn the LED back off when leaving usb interrupt
+    cbi     0x12, 0
     endm
 macro POP_RETI     ; 7 cycles
     pop     YH
     pop     YL
     out     SREG, YL
     pop     YL
+    ; PORTD &= ~_BV(0); turn the LED back off when leaving usb interrupt
+    cbi     0x12, 0
     endm
 
 #include "asmcommon.inc"
